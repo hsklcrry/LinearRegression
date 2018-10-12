@@ -20,6 +20,8 @@ output_dim = 1
 
 X = dict()
 Y = dict()
+Z = dict()
+ds = dict()
 
 dtype = torch.float
 X[0] = torch.tensor([10, 8, 13, 9, 11, 14, 6, 4, 12, 7, 5], dtype=dtype)
@@ -37,9 +39,9 @@ Y[3] = torch.tensor([6.58, 5.76, 7.71, 8.84, 8.47, 7.04, 5.25, 12.5, 5.56, 7.91,
 # X[4] = torch.tensor([0,1,2,3,4,5,6,7,8,9,10], dtype=dtype)
 # Y[4] = torch.tensor([10,9,8,7,6,5,4,3,2,1,0], dtype=dtype)
 
-
+i = -1
 for (x, y) in zip(X.values(), Y.values()):
-
+    i += 1
     model = LinearRegressionModel(input_dim,output_dim)
 
     criterion = nn.MSELoss()  # Mean Squared Loss
@@ -49,7 +51,7 @@ for (x, y) in zip(X.values(), Y.values()):
 
     epochs = 2000
     for epoch in range(epochs):
-        epoch +=1
+        epoch += 1
 
         inputs = Variable(x.reshape(11,1))
         labels = Variable(y.reshape(11,1))
@@ -61,10 +63,13 @@ for (x, y) in zip(X.values(), Y.values()):
         loss.backward()  # back props
         optimiser.step()  # update the parameters
 
-    predicted = model.forward(Variable(x.reshape(11,1))).data.numpy()
+
+    predicted = model.forward(Variable(x.reshape(-1,1)))
+    Z[i] = (predicted.data.reshape((1,-1)).numpy() - y.numpy())[0]
+    Z[i].sort()
 
     plt.plot(x.numpy(), y.numpy(), 'go', label = 'исходные данные', alpha = .5)
-    plt.plot(x.numpy(), predicted, label = 'прогноз', alpha = 0.5)
+    plt.plot(x.numpy(), predicted.data.numpy(), label = 'прогноз', alpha = 0.5)
     plt.legend()
     plt.show()
 
@@ -75,3 +80,32 @@ for (x, y) in zip(X.values(), Y.values()):
     r = ((x*y).mean() - x.mean()*y.mean()) / (((x*x).mean() - x.mean()**2) * ((y*y).mean() - y.mean()**2))**0.5
     print('Коэф. корреляции: {}'.format(r))
 
+
+    g = 0.05
+    ds[i] = np.zeros(len(Z[i]) - 1)
+    for j in range(0,len(Z[i]) - 1):
+        ds[i][j] = Z[i][j+1] - Z[i][j]
+    k = np.argmax(ds[i])
+    if k < g*len(Z[i]) or (1-g)*len(Z[i]) < k:
+        print('Подозрение на выброс! i\' = {}'.format(k))
+        print(ds[i])
+
+print('---------------------')
+i = 2
+x = ds[i][1:]
+ds1 = np.zeros(len(x) - 1)
+for j in range(0,len(x) - 1):
+    ds1[j] = x[j+1] - x[j]
+
+delta = ds[i].mean()
+delta1 = ds1.mean()
+
+s2 = ((ds[i] - delta1)**2 / (len(x) - 1)).sum()
+s = s2**0.5
+G = abs(delta - delta1) / s
+
+print('G = {}'.format(G))
+
+# 2,48
+
+disp = ((x*x).mean() - x.mean()**2)
