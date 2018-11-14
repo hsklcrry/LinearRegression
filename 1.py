@@ -102,7 +102,7 @@ delta1 = ds1.mean()
 
 s2 = ((ds[i] - delta1)**2 / (len(x) - 1)).sum()
 s = s2**0.5
-G = abs(delta - delta1) / s
+G = abs(max(ds[i]) - delta1) / s
 
 print('G = {}'.format(G))
 
