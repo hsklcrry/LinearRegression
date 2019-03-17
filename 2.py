@@ -21,8 +21,6 @@ class LinearRegressionModel(nn.Module):
         out = self.linear(x)
         return out
 
-input_dim = 4
-output_dim = 1
 
 dtype = torch.float
   # Length	 Weight	Len^3	Ln(Length)	Ln(Weight)
@@ -63,17 +61,24 @@ input_data = torch.tensor([[58,	28,	195112,	4.060443,	3.33220451], \
 #Y[0] = torch.tensor([8.04, 6.95, 7.58, 8.81, 8.33, 9.96, 7.24, 4.26, 10.84, 4.82, 5.56], dtype=dtype)
     
 #for (x, y) in zip(X.values(), Y.values()):
-x = input_data[:,1:5]
-y = input_data[:,0:1]
+
+input_dim = 1
+output_dim = 1
+x = input_data[:,2:3]
+k = ((x*x).mean())**0.5
+print(k)
+x = x / ((x*x).mean())**0.5
+y = input_data[:,1:2]
 
 model = LinearRegressionModel(input_dim,output_dim)
 
+
 criterion = nn.MSELoss()  # Mean Squared Loss
 l_rate = 0.007
-optimiser = torch.optim.SGD(model.parameters(), lr = l_rate) 
+optimiser = torch.optim.SGD(model.parameters(), lr = l_rate)
 # Stochastic Gradient Descent
 
-epochs = 200
+epochs = 2000
 for epoch in range(epochs):
     inputs = Variable(x)
     labels = Variable(y)
@@ -87,8 +92,12 @@ for epoch in range(epochs):
 
 predicted = model.forward(Variable(x))
 
-plt.plot(x.numpy(), y.numpy(), 'go', label = 'исходные данные', alpha = .5)
-plt.plot(x.numpy(), predicted.data.numpy(), label = 'прогноз', alpha = 0.5)
+xy = torch.tensor(list(zip(x,y)), dtype=dtype)
+x1 = xy[:,0]
+y1 = xy[:,1]
+
+plt.plot(x1.numpy(), y1.numpy(), 'go', label = 'исходные данные', alpha = .5)
+plt.plot(x1.numpy(), predicted.data.numpy(), label = 'прогноз', alpha = 0.5)
 plt.legend()
 plt.show()
 
